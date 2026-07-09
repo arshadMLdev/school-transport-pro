@@ -1,18 +1,13 @@
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
-
-from app.models import (
-    User,
-    Parent,
-    Driver,
-    Student,
-    Route,
-    RouteStop,
-    Bus,
-    Trip,
-    Attendance,
-    LocationTracking,
-    Notification,
-    EmergencyAlert,
-)
+# Import all models so Alembic can discover them
+from app.models.user import User
+from app.models.parent import Parent
+from app.models.driver import Driver
+from app.models.student import Student
+from app.models.route import Route
+from app.models.route_stop import RouteStop
+from app.models.bus import Bus
+from app.models.trip import Trip
+from app.models.attendance import Attendance
+from app.models.location_tracking import LocationTracking
+from app.models.notification import Notification
+from app.models.emergency_alert import EmergencyAlert

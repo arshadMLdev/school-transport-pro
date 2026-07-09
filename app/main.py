@@ -2,8 +2,11 @@ from fastapi import FastAPI, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.db.session import get_db
+from app.api.routes import auth
 
 app = FastAPI(title="School Transport Pro API")
+
+app.include_router(auth.router)
 
 @app.get("/")
 def read_root():
