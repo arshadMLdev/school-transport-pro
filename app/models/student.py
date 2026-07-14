@@ -23,6 +23,14 @@ class Student(Base):
 
     address = Column(String(255))
 
-    parent_id = Column(Integer, ForeignKey("parents.id"), nullable=False)
+    parent_id = Column(
+    Integer,
+    ForeignKey("parents.id"),
+    nullable=False
+    )
 
-    parent = relationship("Parent")
+
+    parent = relationship(
+        "Parent",
+        back_populates="students"
+    )

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -28,4 +29,16 @@ class User(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+    parent = relationship(
+        "Parent",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
+    driver = relationship(
+        "Driver",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )

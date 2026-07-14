@@ -1,51 +1,137 @@
 from fastapi import APIRouter, Depends
+
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.parent import ParentCreate, ParentUpdate, ParentResponse
+
+from app.api.deps import (
+    get_current_admin,
+    get_current_user
+)
+
+from app.schemas.parent import (
+    ParentCreate,
+    ParentUpdate,
+    ParentResponse
+)
+
 from app.services.parent_service import (
+    create_parent,
     get_parents,
     get_parent,
-    create_parent,
     update_parent,
-    delete_parent,
+    delete_parent
 )
+
 
 router = APIRouter(
     prefix="/parents",
-    tags=["Parents"],
+    tags=["Parents"]
 )
 
 
-@router.get("/", response_model=list[ParentResponse])
-def read_parents(db: Session = Depends(get_db)):
+
+# ============================
+# Create Parent
+# Admin Only
+# ============================
+
+@router.post(
+    "/",
+    response_model=ParentResponse
+)
+def add_parent(
+    parent: ParentCreate,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin)
+):
+
+    return create_parent(
+        db,
+        parent
+    )
+
+
+
+# ============================
+# Get All Parents
+# Admin Only
+# ============================
+
+@router.get(
+    "/",
+    response_model=list[ParentResponse]
+)
+def read_parents(
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin)
+):
+
     return get_parents(db)
 
 
-@router.get("/{parent_id}", response_model=ParentResponse)
-def read_parent(parent_id: int, db: Session = Depends(get_db)):
-    return get_parent(db, parent_id)
+
+# ============================
+# Get Single Parent
+# Admin OR Own Parent
+# ============================
+
+@router.get(
+    "/{parent_id}",
+    response_model=ParentResponse
+)
+def read_parent(
+    parent_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+
+    return get_parent(
+        db,
+        parent_id
+    )
 
 
-@router.post("/", response_model=ParentResponse)
-def add_parent(parent: ParentCreate, db: Session = Depends(get_db)):
-    return create_parent(db, parent)
 
+# ============================
+# Update Parent
+# Admin Only
+# ============================
 
-@router.put("/{parent_id}", response_model=ParentResponse)
+@router.put(
+    "/{parent_id}",
+    response_model=ParentResponse
+)
 def edit_parent(
     parent_id: int,
     parent: ParentUpdate,
     db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin)
 ):
-    return update_parent(db, parent_id, parent)
+
+    return update_parent(
+        db,
+        parent_id,
+        parent
+    )
 
 
-@router.delete("/{parent_id}")
+
+# ============================
+# Delete Parent
+# Admin Only
+# ============================
+
+@router.delete(
+    "/{parent_id}"
+)
 def remove_parent(
     parent_id: int,
     db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin)
 ):
-    delete_parent(db, parent_id)
 
-    return {"message": "Parent deleted successfully"}
+    return delete_parent(
+        db,
+        parent_id
+    )
