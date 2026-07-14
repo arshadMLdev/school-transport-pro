@@ -1,28 +1,45 @@
-from pydantic import BaseModel
-from datetime import date
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
-class StudentBase(BaseModel):
-    parent_id: int
+class StudentCreate(BaseModel):
     full_name: str
-    grade: str
-    section: str
-    gender: str
-    date_of_birth: date
-    address: str
     admission_number: str
+    grade: str
+    section: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    address: Optional[str] = None
+    parent_id: int
 
 
-class StudentCreate(StudentBase):
-    pass
+class StudentUpdate(BaseModel):
+    full_name: Optional[str] = None
+    admission_number: Optional[str] = None
+    grade: Optional[str] = None
+    section: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    address: Optional[str] = None
+    parent_id: Optional[int] = None
 
 
-class StudentUpdate(StudentBase):
-    pass
+class StudentResponse(BaseModel):
 
-
-class StudentResponse(StudentBase):
     id: int
+    full_name: str
+    admission_number: str
+    grade: str
+    section: Optional[str]
+    gender: Optional[str]
+    date_of_birth: Optional[date]
+    address: Optional[str]
+    parent_id: int
 
-    class Config:
-        from_attributes = True
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
