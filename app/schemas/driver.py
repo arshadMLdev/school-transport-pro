@@ -1,58 +1,51 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
 
-class ParentCreate(BaseModel):
-
-    # User fields
+class DriverCreate(BaseModel):
     full_name: str
     email: EmailStr
     mobile: str
     password: str
 
-
-    # Parent fields
+    license_number: str
+    license_expiry: Optional[date] = None
+    experience_years: Optional[int] = None
     address: Optional[str] = None
     emergency_contact: Optional[str] = None
-    relationship_to_student: Optional[str] = None
 
 
-
-class ParentUpdate(BaseModel):
-
-    # User fields
+class DriverUpdate(BaseModel):
+    # User fields (optional — updated on the linked User record)
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     mobile: Optional[str] = None
 
-
-    # Parent fields
+    # Driver fields
+    license_number: Optional[str] = None
+    license_expiry: Optional[date] = None
+    experience_years: Optional[int] = None
     address: Optional[str] = None
     emergency_contact: Optional[str] = None
-    relationship_to_student: Optional[str] = None
     status: Optional[str] = None
 
 
-
-class ParentResponse(BaseModel):
-
+class DriverResponse(BaseModel):
     id: int
 
-
-    # User information
     full_name: str
     email: EmailStr
     mobile: str
 
-
-    # Parent information
+    license_number: str
+    license_expiry: Optional[date]
+    experience_years: Optional[int]
     address: Optional[str]
     emergency_contact: Optional[str]
-    relationship_to_student: Optional[str]
 
     status: str
-
 
     class Config:
         from_attributes = True
