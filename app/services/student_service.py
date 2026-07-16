@@ -1,26 +1,43 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app.models.student import Student
 from app.models.parent import Parent
+from app.models.user import User
+
 from app.schemas.student import (
     StudentCreate,
-    StudentUpdate
+    StudentUpdate,
 )
 
 
+
 def get_students(db: Session):
+    """
+    Return all students.
+    Admin only access.
+    """
 
-    return db.query(Student).all()
+    return (
+        db.query(Student)
+        .all()
+    )
 
 
 
-def get_student(db: Session, student_id: int):
+def get_student(
+    db: Session,
+    student_id: int
+):
+    """
+    Get single student by ID.
+    """
 
     student = (
         db.query(Student)
-        .filter(Student.id == student_id)
+        .filter(
+            Student.id == student_id
+        )
         .first()
     )
 
@@ -34,10 +51,59 @@ def get_student(db: Session, student_id: int):
 
 
 
+def get_student_for_user(
+    db: Session,
+    student_id: int,
+    user: User
+):
+    """
+    Authorization check.
+
+    ADMIN:
+        Can access all students.
+
+    PARENT:
+        Can access only own children.
+    """
+
+    student = get_student(
+        db,
+        student_id
+    )
+
+
+    if user.role == "ADMIN":
+        return student
+
+
+    if user.role == "PARENT":
+
+        if student.parent.user_id != user.id:
+
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied"
+            )
+
+        return student
+
+
+    raise HTTPException(
+        status_code=403,
+        detail="Access denied"
+    )
+
+
+
 def create_student(
     db: Session,
     student_data: StudentCreate
 ):
+    """
+    Create new student.
+    """
+
+    # Validate parent exists
 
     parent = (
         db.query(Parent)
@@ -47,14 +113,18 @@ def create_student(
         .first()
     )
 
+
     if not parent:
+
         raise HTTPException(
             status_code=404,
             detail="Parent not found"
         )
 
 
-    existing = (
+    # Check duplicate admission number
+
+    existing_student = (
         db.query(Student)
         .filter(
             Student.admission_number ==
@@ -64,7 +134,8 @@ def create_student(
     )
 
 
-    if existing:
+    if existing_student:
+
         raise HTTPException(
             status_code=400,
             detail="Admission number already exists"
@@ -76,9 +147,21 @@ def create_student(
     )
 
 
-    db.add(student)
-    db.commit()
-    db.refresh(student)
+    try:
+
+        db.add(student)
+
+        db.commit()
+
+        db.refresh(student)
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
 
     return student
 
@@ -89,6 +172,9 @@ def update_student(
     student_id: int,
     student_data: StudentUpdate
 ):
+    """
+    Partial student update.
+    """
 
     student = get_student(
         db,
@@ -96,10 +182,39 @@ def update_student(
     )
 
 
-    data = student_data.model_dump(
-        exclude_unset=True
+    data = (
+        student_data
+        .model_dump(
+            exclude_unset=True
+        )
     )
 
+
+    # Check duplicate admission number
+
+    if "admission_number" in data:
+
+        existing_student = (
+            db.query(Student)
+            .filter(
+                Student.admission_number ==
+                data["admission_number"],
+                Student.id != student_id
+            )
+            .first()
+        )
+
+
+        if existing_student:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Admission number already exists"
+            )
+
+
+
+    # Validate new parent
 
     if "parent_id" in data:
 
@@ -111,14 +226,17 @@ def update_student(
             .first()
         )
 
+
         if not parent:
+
             raise HTTPException(
                 status_code=404,
                 detail="Parent not found"
             )
 
 
-    for key,value in data.items():
+    for key, value in data.items():
+
         setattr(
             student,
             key,
@@ -126,8 +244,19 @@ def update_student(
         )
 
 
-    db.commit()
-    db.refresh(student)
+    try:
+
+        db.commit()
+
+        db.refresh(student)
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
 
     return student
 
@@ -135,8 +264,11 @@ def update_student(
 
 def delete_student(
     db: Session,
-    student_id:int
+    student_id: int
 ):
+    """
+    Delete student.
+    """
 
     student = get_student(
         db,
@@ -144,17 +276,33 @@ def delete_student(
     )
 
 
-    db.delete(student)
-    db.commit()
+    try:
 
-    return student
+        db.delete(student)
+
+        db.commit()
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+    return {
+        "message": "Student deleted successfully"
+    }
 
 
 
 def get_parent_students(
-    db:Session,
-    parent_id:int
+    db: Session,
+    parent_id: int
 ):
+    """
+    Return students belonging to a parent.
+    """
 
     return (
         db.query(Student)
