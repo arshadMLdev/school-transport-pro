@@ -4,6 +4,32 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+from app.db.base import Base
+
+# Import all models so Alembic can detect them
+from app.models.user import User
+from app.models.parent import Parent
+from app.models.driver import Driver
+from app.models.student import Student
+from app.models.bus import Bus
+
+
+config = context.config
+
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+
+target_metadata = Base.metadata
+
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
+from alembic import context
 from app.db.base import Base
 
 # this is the Alembic Config object, which provides

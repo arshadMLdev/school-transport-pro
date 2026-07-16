@@ -1,93 +1,122 @@
 from datetime import date, datetime
-from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class StudentCreate(BaseModel):
-    """
-    Schema used when creating a new student.
-    """
+class StudentBase(BaseModel):
+    """Common student fields shared by create and response schemas."""
 
-    full_name: str
+    model_config = ConfigDict(str_strip_whitespace=True)
 
-    admission_number: str
+    full_name: str = Field(
+        min_length=2,
+        max_length=100,
+    )
+    admission_number: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+    grade: str = Field(
+        min_length=1,
+        max_length=20,
+    )
+    section: str | None = Field(
+        default=None,
+        max_length=10,
+    )
+    gender: str | None = Field(
+        default=None,
+        max_length=10,
+    )
+    date_of_birth: date | None = None
+    address: str | None = Field(
+        default=None,
+        max_length=255,
+    )
+    parent_id: int = Field(gt=0)
 
-    grade: str
+    @field_validator("date_of_birth")
+    @classmethod
+    def validate_date_of_birth(
+        cls,
+        value: date | None,
+    ) -> date | None:
+        if value is not None and value > date.today():
+            raise ValueError(
+                "Date of birth cannot be in the future"
+            )
 
-    section: Optional[str] = None
+        return value
 
-    gender: Optional[str] = None
 
-    date_of_birth: Optional[date] = None
+class StudentCreate(StudentBase):
+    """Request schema for creating a student."""
 
-    address: Optional[str] = None
-
-    parent_id: int
-
+    pass
 
 
 class StudentUpdate(BaseModel):
     """
-    Schema used for updating student information.
+    Request schema for partially updating a student.
 
-    All fields are optional because updates are partial.
-    Example:
-    
-    {
-        "address": "Mumbai"
-    }
-
-    Only address will be updated.
+    All fields are optional because PATCH should update only the
+    fields supplied in the request.
     """
 
-    full_name: Optional[str] = None
+    model_config = ConfigDict(str_strip_whitespace=True)
 
-    admission_number: Optional[str] = None
+    full_name: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=100,
+    )
+    admission_number: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=50,
+    )
+    grade: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=20,
+    )
+    section: str | None = Field(
+        default=None,
+        max_length=10,
+    )
+    gender: str | None = Field(
+        default=None,
+        max_length=10,
+    )
+    date_of_birth: date | None = None
+    address: str | None = Field(
+        default=None,
+        max_length=255,
+    )
+    parent_id: int | None = Field(
+        default=None,
+        gt=0,
+    )
 
-    grade: Optional[str] = None
+    @field_validator("date_of_birth")
+    @classmethod
+    def validate_date_of_birth(
+        cls,
+        value: date | None,
+    ) -> date | None:
+        if value is not None and value > date.today():
+            raise ValueError(
+                "Date of birth cannot be in the future"
+            )
 
-    section: Optional[str] = None
-
-    gender: Optional[str] = None
-
-    date_of_birth: Optional[date] = None
-
-    address: Optional[str] = None
-
-    parent_id: Optional[int] = None
+        return value
 
 
+class StudentResponse(StudentBase):
+    """Response schema returned by Student API endpoints."""
 
-class StudentResponse(BaseModel):
-    """
-    Schema returned to API clients.
-    """
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
-
-    full_name: str
-
-    admission_number: str
-
-    grade: str
-
-    section: Optional[str] = None
-
-    gender: Optional[str] = None
-
-    date_of_birth: Optional[date] = None
-
-    address: Optional[str] = None
-
-    parent_id: int
-
     created_at: datetime
-
     updated_at: datetime
-
-
-    model_config = ConfigDict(
-        from_attributes=True
-    )
