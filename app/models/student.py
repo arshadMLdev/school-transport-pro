@@ -77,6 +77,13 @@ class Student(Base):
         nullable=False
     )
 
+
+    route_id = Column(
+        Integer,
+        ForeignKey("routes.id"),
+        nullable=True
+    )
+
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now()
@@ -93,4 +100,9 @@ class Student(Base):
     parent = relationship(
         "Parent",
         back_populates="students"
+    )
+
+
+    route = relationship(
+        "Route"
     )
