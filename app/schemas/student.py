@@ -34,7 +34,12 @@ class StudentBase(BaseModel):
         max_length=255,
     )
     parent_id: int = Field(gt=0)
+ 
 
+    route_id: int | None = Field(
+        default=None,
+        gt=0,
+)
     @field_validator("date_of_birth")
     @classmethod
     def validate_date_of_birth(
@@ -97,7 +102,12 @@ class StudentUpdate(BaseModel):
         default=None,
         gt=0,
     )
+    
 
+    route_id: int | None = Field(
+        default=None,
+        gt=0,
+)
     @field_validator("date_of_birth")
     @classmethod
     def validate_date_of_birth(

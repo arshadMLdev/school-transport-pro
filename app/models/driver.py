@@ -85,3 +85,6 @@ class Driver(Base):
         "Bus",
         back_populates="driver"
     )
+    routes = relationship(
+        "Route"
+    )

@@ -9,7 +9,7 @@ from app.models.parent import Parent
 from app.models.student import Student
 from app.models.user import User
 from app.schemas.student import StudentCreate, StudentUpdate
-
+from app.models.route import Route
 
 ADMISSION_NUMBER_CONSTRAINTS = {
     "students_admission_number_key",
@@ -156,6 +156,19 @@ def create_student(
         db=db,
         admission_number=student_data.admission_number,
     )
+
+    if student_data.route_id is not None:
+        route = db.scalar(
+            select(Route).where(
+                Route.id == student_data.route_id
+            )
+        )
+
+        if route is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Route not found",
+            )
 
     student = Student(
         **student_data.model_dump()
@@ -317,6 +330,22 @@ def update_student(
     update_data = student_data.model_dump(
         exclude_unset=True
     )
+
+    if "route_id" in update_data:
+        route_id = update_data["route_id"]
+
+        if route_id is not None:
+            route = db.scalar(
+                select(Route).where(
+                    Route.id == route_id
+                )
+            )
+
+            if route is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Route not found",
+                )
 
     if not update_data:
         raise HTTPException(
